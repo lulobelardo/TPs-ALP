@@ -1,4 +1,3 @@
---Eval2
 module Eval2
   ( eval
   , State
