@@ -68,6 +68,12 @@ evalExp (VarInc v) s =
         newState = update v newVal s  
     in newVal :!: newState
 
+evalExp (VarDec v) s =
+    let val     = lookfor v s     
+        newVal  = val - 1         
+        newState = update v newVal s  
+    in newVal :!: newState
+
 evalExp (Plus e1 e2) s = 
                         let (v1 :!: s1) = evalExp e1 s
                             (v2 :!: s2) = evalExp e2 s1
