@@ -48,6 +48,11 @@ evalExp (VarInc v) s = do
     let newVal = val + 1
         s1 = update v newVal s
     return (newVal :!: s1)
+evalExp (VarDec v) s = do
+    val <- lookfor v s
+    let newVal = val - 1
+        s1 = update v newVal s
+    return (newVal :!: s1)
 evalExp (Plus e1 e2) s = do
     (v1 :!: s1) <- evalExp e1 s
     (v2 :!: s2) <- evalExp e2 s1
@@ -113,24 +118,15 @@ stepComm (Seq c1 c2) s = do
     (c1' :!: s1) <- stepComm c1 s
     Right (Seq c1' c2 :!: s1)
 
-stepComm (RepeatUntil c b) s = do
-    s1 <- stepCommStar c s
-    (cond :!: s2) <- evalExp b s1
-    if cond
-       then Right (Skip :!: s2)  -- solo guardamos los pasos internos
-       else do
-           (_ :!: s3) <- stepComm (RepeatUntil c b) s2
-           Right (Skip :!: s3)
-
 stepComm (IfThenElse b c1 c2) s = do
     (cond :!: s1) <- evalExp b s
     if cond
-       then do
-        s3 <- stepCommStar c1 s1
-        Right (Skip :!: s3) 
-       else do
-        s3 <- stepCommStar c2 s1
-        Right (Skip :!: s3)
+       then Right (c1 :!: s1)
+       else Right (c2 :!: s1)
+
+stepComm (RepeatUntil c b) s = 
+    Right (Seq c (IfThenElse b Skip (RepeatUntil c b)) :!: s)
+
 
 stepCommStar :: Comm -> State -> Either Error State
 stepCommStar Skip s = return s
