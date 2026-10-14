@@ -1,0 +1,6 @@
+y = 0;
+if true || false && false {
+    y = 1
+} else {
+    y = 2
+}
