@@ -22,7 +22,23 @@ import           Common
 
 -- conversion a términos localmente sin nombres
 conversion :: LamTerm -> Term
-conversion = undefined
+-- Ej 1
+conversion = conv []
+  where
+    conv :: [String] -> LamTerm -> Term
+    conv sigma (LVar x) = 
+      case elemIndex x sigma of
+        Just i -> Bound i
+        Nothing -> Free (Global x)
+    conv sigma (LAbs x typ t) = Lam typ (conv (x : sigma) t)
+    conv sigma (LApp t1 t2) = conv sigma t1 :@: conv sigma t2
+    -- Ej 3
+    conv sigma (LLet x t1 t2) = Let (conv sigma t1) (conv (x : sigma) t2)
+    -- Ej 4
+    conv _ LZero = Zero
+    conv sigma (LSuc t) = Suc (conv sigma t)
+    conv sigma (LRec t1 t2 t3) = Rec (conv sigma t1) (conv sigma t2) (conv sigma t3)
+
 
 ----------------------------
 --- evaluador de términos
@@ -35,17 +51,52 @@ sub _ _ (Bound j) | otherwise = Bound j
 sub _ _ (Free n   )           = Free n
 sub i t (u   :@: v)           = sub i t u :@: sub i t v
 sub i t (Lam t'  u)           = Lam t' (sub (i + 1) t u)
+-- Ej 3
+sub i t (Let u v) = Let (sub i t u) (sub (i + 1) t v)
+-- Ej 4
+sub _ _ Zero                  = Zero
+sub i t (Suc u)               = Suc (sub i t u)
+sub i t (Rec u v w)           = Rec (sub i t u) (sub i t v) (sub i t w)
 
 -- convierte un valor en el término equivalente
 quote :: Value -> Term
 quote (VLam t f) = Lam t f
+-- Ej 4
+quote (VNum NZero) = Zero
+quote (VNum (NSuc n)) = Suc (quote (VNum n))
 
 -- evalúa un término en un entorno dado
 eval :: NameEnv Value Type -> Term -> Value
-eval = undefined
-
-
-
+-- Ej 2
+eval _ (Lam t u) = VLam t u
+eval e (Free n) = 
+  case lookup n e of
+    Just (v, _) -> v
+    Nothing -> error("Variable global no encontrada: " ++ show n)
+eval _ (Bound _) = error "Variable ligada sin sustituir en eval"
+eval e (t1 :@: t2) = 
+  case eval e t1 of
+    VLam _ u ->
+      let v2 = eval e t2
+      in eval e (sub 0 (quote v2) u)
+    _ -> error "Error de tipos"
+-- Ej 3 
+eval e (Let t1 t2) =
+  let v1 = eval e t1
+  in eval e (sub 0 (quote v1) t2)
+-- Ej 4
+eval _ Zero = VNum NZero
+eval e (Suc t) = 
+  case eval e t of
+    VNum n -> VNum (NSuc n)
+    _ -> error "Error de tipos"
+eval e (Rec t1 t2 t3) = 
+  case eval e t3 of
+    VNum NZero -> eval e t1
+    VNum (NSuc n) ->
+      let t = quote (VNum n)
+      in eval e ((t2 :@: Rec t1 t2 t) :@: t)
+    _ -> error "Error de tipos"
 
 ----------------------
 --- type checker
@@ -93,5 +144,21 @@ infer' c e (t :@: u) = infer' c e t >>= \tt -> infer' c e u >>= \tu ->
     FunT t1 t2 -> if (tu == t1) then ret t2 else matchError t1 tu
     _          -> notfunError tt
 infer' c e (Lam t u) = infer' (t : c) e u >>= \tu -> ret $ FunT t tu
-
+-- Ej 3
+infer' c e (Let t1 t2) =
+  infer' c e t1 >>= \tt1 ->
+  infer' (tt1 : c) e t2
+-- Ej 4
+infer' _ _ Zero = ret NatT
+infer' c e (Suc t) =
+  infer' c e t >>= \tt ->
+  if tt == NatT then ret NatT else matchError NatT tt
+infer' c e (Rec t1 t2 t3) =
+  infer' c e t1 >>= \tt1 ->
+  infer' c e t2 >>= \tt2 ->
+  let expectedT2 = FunT tt1 (FunT NatT tt1)
+  in if tt2 /= expectedT2
+       then matchError expectedT2 tt2
+       else infer' c e t3 >>= \tt3 ->
+         if tt3 == NatT then ret tt1 else matchError NatT tt3
 

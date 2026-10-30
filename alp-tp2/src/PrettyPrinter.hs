@@ -37,11 +37,60 @@ pp ii vs (Lam t c) =
     <> printType t
     <> text ". "
     <> pp (ii + 1) vs c
+-- Ej 3 
+pp ii vs (Let t1 t2) =
+  text "let "
+    <> text (vs !! ii)
+    <> text " = "
+    <> pp ii vs t1
+    <> text " in "
+    <> pp (ii + 1) vs t2
+-- Ej 4
+pp _  _  Zero = text "0"
+pp ii vs (Suc t) =
+  text "suc " <> parensIf (isLamOnly t || isLet t || isRec t) (pp ii vs t)
+pp ii vs (Rec t1 t2 t3) = sep
+  [ text "R"
+  , parensIf (not (isAtom t1)) (pp ii vs t1)
+  , parensIf (not (isAtom t2)) (pp ii vs t2)
+  , parensIf (isLamOnly t3 || isLet t3) (pp ii vs t3)
+  ]
 
+-- Ej 4
+isAtom :: Term -> Bool
+isAtom (Bound _) = True
+isAtom (Free  _) = True
+isAtom Zero      = True
+isAtom _         = False
+
+-- Ej 4
+isLamOnly :: Term -> Bool
+isLamOnly (Lam _ _) = True
+isLamOnly _         = False
 
 isLam :: Term -> Bool
 isLam (Lam _ _) = True
+-- Ej 3
+isLam (Let _ _) = True
+-- Ej 4
+isLam (Rec _ _ _) = True
+isLam (Suc _)     = True
 isLam _         = False
+
+-- Ej 3
+isLet :: Term -> Bool
+isLet (Let _ _) = True
+isLet _         = False
+
+-- Ej 4
+isRec :: Term -> Bool
+isRec (Rec _ _ _) = True
+isRec _           = False
+
+-- Ej 4
+isSuc :: Term -> Bool
+isSuc (Suc _) = True
+isSuc _       = False 
 
 isApp :: Term -> Bool
 isApp (_ :@: _) = True
@@ -52,6 +101,8 @@ printType :: Type -> Doc
 printType EmptyT = text "E"
 printType (FunT t1 t2) =
   sep [parensIf (isFun t1) (printType t1), text "->", printType t2]
+-- Ej 4
+printType NatT   = text "Nat"
 
 
 isFun :: Type -> Bool
@@ -63,6 +114,12 @@ fv (Bound _         ) = []
 fv (Free  (Global n)) = [n]
 fv (t   :@: u       ) = fv t ++ fv u
 fv (Lam _   u       ) = fv u
+-- Ej 3
+fv (Let t1 t2) = fv t1 ++ fv t2
+-- Ej 4
+fv Zero               = []
+fv (Suc t           ) = fv t
+fv (Rec t1  t2  t3  ) = fv t1 ++ fv t2 ++ fv t3
 
 ---
 printTerm :: Term -> Doc
