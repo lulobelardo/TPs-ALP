@@ -103,6 +103,9 @@ printType (FunT t1 t2) =
   sep [parensIf (isFun t1) (printType t1), text "->", printType t2]
 -- Ej 4
 printType NatT   = text "Nat"
+-- Ej 6
+printType ListT = text "List Nat"
+
 
 
 isFun :: Type -> Bool
@@ -120,6 +123,9 @@ fv (Let t1 t2) = fv t1 ++ fv t2
 fv Zero               = []
 fv (Suc t           ) = fv t
 fv (Rec t1  t2  t3  ) = fv t1 ++ fv t2 ++ fv t3
+-- Ej 6
+fv Nil = []
+fv (Cons t u) = fv t ++ fv u
 
 ---
 printTerm :: Term -> Doc
