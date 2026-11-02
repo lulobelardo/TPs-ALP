@@ -33,6 +33,14 @@ import Data.Char
     TYPENAT { TTypeNat }
     SUC     { TSuc }
     R       { TRec }
+    -- Ej 6
+    'nil'       { TNil }
+    'cons'      { TCons }
+    'RL'        { TListRec }
+    'List Nat'  { TTypeList }
+    VAR         { TVar $$ }
+    TYPEE       { TTypeE }
+    DEF         { TDef }
     
 
 %left '=' 
@@ -70,6 +78,7 @@ Atom    :: { LamTerm }
 Type    : TYPEE                        { EmptyT }
         | Type '->' Type               { FunT $1 $3 }
         | '(' Type ')'                 { $2 }
+        | 'List Nat'                   { ListT }
         -- Ej 4
         | TYPENAT                      { NatT }
 
