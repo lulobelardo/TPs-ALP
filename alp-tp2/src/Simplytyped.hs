@@ -164,6 +164,10 @@ infer' c e (Rec t1 t2 t3) =
 
 -- Ej 6
 infer' c e Nil = ret ListT
-infer' c e (Cons t1 t2) = 
-  match NatT (infer' c e t1) >> match ListT (infer' c e t2) >> ret ListT
+infer' c e (Cons t1 t2) =
+  infer' c e t1 >>= \tt1 ->
+  if tt1 /= NatT then matchError NatT tt1
+  else infer' c e t2 >>= \tt2 ->
+  if tt2 /= ListT then matchError ListT tt2
+  else ret ListT
 
