@@ -13,12 +13,12 @@
 /home/lulo/2026/Tps/alp-tp2/package.yaml:
   hash: 3f5d9d8a2a57469ed5359f4daf48ab7a74a6eb0299ce2def67ad968547b7ac61
 /home/lulo/2026/Tps/alp-tp2/src/Common.hs:
-  hash: c18f467a1f4eb4701a3dc29bdbac50ad025d8d4ec7487cc872b67920340fde4e
+  hash: e14c908dea7cc06f1712931167899c8b4c27cb250635075013b5a68639021085
 /home/lulo/2026/Tps/alp-tp2/src/Parse.y:
-  hash: 79c50174ec718bc92b7d819f7fb355b2bf8f2a031d7a2dbaf9dd20b6c3bf7659
+  hash: 5b7653a66cc16877e789a3613cea25e7d8063b26f57ece293e432e56d3354388
 /home/lulo/2026/Tps/alp-tp2/src/PrettyPrinter.hs:
-  hash: 2a05c0022c6090a9f894aa38d7cb4bdbf5ac3fd599250700a12771d4986c1644
+  hash: 2f55fde75bfe97adeecd407577f875d3662992b9be931b6ce44852c493d2619c
 /home/lulo/2026/Tps/alp-tp2/src/Simplytyped.hs:
-  hash: cc2878beffdb045b2dcc924a0059b84f314da48adc44e91c2fe992afe0e24914
+  hash: 3ddb9c5060839bcde01b06bc23f4dbc90b235d03712efeaaf0a676919c8953c2
 /usr/include/stdc-predef.h:
   hash: cb08cd5d4cc059a90833ac48a284d25016e8d56ded8ad4cd98d8ac59cc5053f3

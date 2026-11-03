@@ -55,12 +55,27 @@ pp ii vs (Rec t1 t2 t3) = sep
   , parensIf (not (isAtom t2)) (pp ii vs t2)
   , parensIf (isLamOnly t3 || isLet t3) (pp ii vs t3)
   ]
+-- Ej 6
+pp _ _ Nil = text "nil"
+pp ii vs (Cons h t) = sep
+  [ text "cons"
+  , parensIf (not (isAtom h) && not (isSuc h)) (pp ii vs h)
+  , parensIf (isLamOnly t || isLet t || isRec t) (pp ii vs t)
+  ]
+pp ii vs (ListRec t1 t2 t3) = sep
+  [ text "RL"
+  , parensIf (not (isAtom t1)) (pp ii vs t1)
+  , parensIf (not (isAtom t2)) (pp ii vs t2)
+  , parensIf (isLamOnly t3 || isLet t3 || isRecOnly t3) (pp ii vs t3)
+  ]
 
 -- Ej 4
 isAtom :: Term -> Bool
 isAtom (Bound _) = True
 isAtom (Free  _) = True
 isAtom Zero      = True
+-- Ej 6
+isAtom Nil       = True
 isAtom _         = False
 
 -- Ej 4
@@ -75,6 +90,9 @@ isLam (Let _ _) = True
 -- Ej 4
 isLam (Rec _ _ _) = True
 isLam (Suc _)     = True
+-- Ej 6
+isLam (ListRec _ _ _) = True
+isLam (Cons _ _)      = True
 isLam _         = False
 
 -- Ej 3
@@ -85,7 +103,19 @@ isLet _         = False
 -- Ej 4
 isRec :: Term -> Bool
 isRec (Rec _ _ _) = True
+-- Ej 6
+isRec (ListRec _ _ _) = True
 isRec _           = False
+
+-- Ej 6
+isRecOnly :: Term -> Bool
+isRecOnly (Rec _ _ _) = True
+isRecOnly _           = False
+
+-- Ej 6
+isCons :: Term -> Bool
+isCons (Cons _ _) = True
+isCons _          = False
 
 -- Ej 4
 isSuc :: Term -> Bool
@@ -103,7 +133,8 @@ printType (FunT t1 t2) =
   sep [parensIf (isFun t1) (printType t1), text "->", printType t2]
 -- Ej 4
 printType NatT   = text "Nat"
-
+-- Ej 6
+printType ListT = text "List Nat"
 
 isFun :: Type -> Bool
 isFun (FunT _ _) = True
@@ -120,6 +151,10 @@ fv (Let t1 t2) = fv t1 ++ fv t2
 fv Zero               = []
 fv (Suc t           ) = fv t
 fv (Rec t1  t2  t3  ) = fv t1 ++ fv t2 ++ fv t3
+-- Ej 6
+fv Nil = []
+fv (Cons t u) = fv t ++ fv u
+fv (ListRec t1 t2 t3) = fv t1 ++ fv t2 ++ fv t3
 
 ---
 printTerm :: Term -> Doc

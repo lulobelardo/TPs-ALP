@@ -1,0 +1,17 @@
+-- 1. Funciones auxiliares aritméticas usando el recursor de Naturales (R)
+def pred = \n:Nat. R 0 (\rec:Nat. \y:Nat. y) n
+def sub = \a:Nat. \b:Nat. R a (\rec:Nat. \y:Nat. pred rec) b
+def add = \a:Nat. \b:Nat. R a (\rec:Nat. \y:Nat. suc rec) b
+
+-- 2. Comparación de igualdad (not_eq a b = |a - b|)
+def notEq = \a:Nat. \b:Nat. add (sub a b) (sub b a)
+
+-- 3. Condicional ifZero adaptado para devolver un tipo 'List Nat'
+-- Si n == 0 devuelve thenC, si n > 0 devuelve elseC
+def ifZeroList = \n:Nat. \thenC:List Nat. \elseC:List Nat. R thenC (\rec:List Nat. \y:Nat. elseC) n
+
+-- 4. Función removeAll: elimina todas las apariciones de un 'target' en una lista
+def removeAll = \target:Nat. \l:List Nat. RL nil (\x:Nat. \rec:List Nat. ifZeroList (notEq x target) rec (cons x rec)) l
+
+-- 5. Función principal elimDups
+def elimDups = \l:List Nat. RL nil (\x:Nat. \rec:List Nat. cons x (removeAll x rec)) l

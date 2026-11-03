@@ -38,6 +38,10 @@ conversion = conv []
     conv _ LZero = Zero
     conv sigma (LSuc t) = Suc (conv sigma t)
     conv sigma (LRec t1 t2 t3) = Rec (conv sigma t1) (conv sigma t2) (conv sigma t3)
+    -- Ej 6
+    conv _ LNil = Nil
+    conv sigma (LCons t u) = Cons (conv sigma t) (conv sigma u)
+    conv sigma (LListRec t1 t2 t3) = ListRec (conv sigma t1) (conv sigma t2) (conv sigma t3)
 
 
 ----------------------------
@@ -57,6 +61,10 @@ sub i t (Let u v) = Let (sub i t u) (sub (i + 1) t v)
 sub _ _ Zero                  = Zero
 sub i t (Suc u)               = Suc (sub i t u)
 sub i t (Rec u v w)           = Rec (sub i t u) (sub i t v) (sub i t w)
+-- Ej 6
+sub i t Nil                    = Nil
+sub i t (Cons u v)             = Cons (sub i t u) (sub i t v)
+sub i t (ListRec u v w)        = ListRec (sub i t u) (sub i t v) (sub i t w)
 
 -- convierte un valor en el término equivalente
 quote :: Value -> Term
@@ -64,6 +72,9 @@ quote (VLam t f) = Lam t f
 -- Ej 4
 quote (VNum NZero) = Zero
 quote (VNum (NSuc n)) = Suc (quote (VNum n))
+-- Ej 6
+quote (VList VNil) = Nil
+quote (VList (VCons n ns)) = Cons (quote (VNum n)) (quote (VList ns))
 
 -- evalúa un término en un entorno dado
 eval :: NameEnv Value Type -> Term -> Value
@@ -97,6 +108,18 @@ eval e (Rec t1 t2 t3) =
       let t = quote (VNum n)
       in eval e ((t2 :@: Rec t1 t2 t) :@: t)
     _ -> error "Error de tipos"
+-- Ej 6
+eval e Nil = VList VNil
+eval e (Cons h t) = case (eval e h, eval e t) of
+  (VNum n, VList ns) -> VList (VCons n ns)
+  _ -> error "Error de tipos"
+eval e (ListRec base step xs) = case eval e xs of
+  VList VNil -> eval e base
+  VList (VCons h tl) ->
+    let n  = quote (VNum h)
+        lv = quote (VList tl)
+    in eval e ((step :@: n) :@: ListRec base step lv)
+  _ -> error "Error de tipos"
 
 ----------------------
 --- type checker
@@ -161,4 +184,19 @@ infer' c e (Rec t1 t2 t3) =
        then matchError expectedT2 tt2
        else infer' c e t3 >>= \tt3 ->
          if tt3 == NatT then ret tt1 else matchError NatT tt3
+
+-- Ej 6
+infer' _ _ Nil = ret ListT
+infer' c e (Cons t1 t2) =
+  infer' c e t1 >>= \tt1 ->
+  if tt1 /= NatT then matchError NatT tt1
+  else infer' c e t2 >>= \tt2 ->
+  if tt2 /= ListT then matchError ListT tt2
+  else ret ListT
+infer' c e (ListRec base step xs) =
+  infer' c e base >>= \tb ->
+  infer' c e step >>= \ts ->
+  let expected = FunT NatT (FunT tb tb)
+  in if ts /= expected then matchError expected ts else
+       infer' c e xs >>= \tx -> if tx == ListT then ret tb else matchError ListT tx
 

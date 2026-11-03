@@ -33,6 +33,12 @@ import Data.Char
     TYPENAT { TTypeNat }
     SUC     { TSuc }
     R       { TRec }
+    -- Ej 6
+    'nil'       { TNil }
+    'cons'      { TCons }
+    'RL'        { TListRec }
+    'List Nat'  { TTypeList }
+    
     
 
 %left '=' 
@@ -56,7 +62,15 @@ Exp     :: { LamTerm }
         -- Ej 4
         | R Atom Atom Exp              { LRec $2 $3 $4 }
         | SUC Exp                      { LSuc $2 }
+        -- Ej 6 
+        | 'RL' Atom Atom Exp           { LListRec $2 $3 $4 }
+        | 'cons' Atom Exp              { LCons $2 $3 }
         
+-- Ej 6
+SucAtom :: { LamTerm }
+        : SUC SucAtom                  { LSuc $2 }
+        | Atom                         { $1 }
+
 NAbs    :: { LamTerm }
         : NAbs Atom                    { LApp $1 $2 }
         | Atom                         { $1 }
@@ -66,12 +80,16 @@ Atom    :: { LamTerm }
         | '(' Exp ')'                  { $2 }
         -- Ej 4
         | '0'                          { LZero }
+        -- Ej 6 
+        | 'nil'                        { LNil }
 
 Type    : TYPEE                        { EmptyT }
         | Type '->' Type               { FunT $1 $3 }
         | '(' Type ')'                 { $2 }
         -- Ej 4
         | TYPENAT                      { NatT }
+        -- Ej 6
+        | 'List Nat'                   { ListT }
 
 Defs    : Defexp Defs                  { $1 : $2 }
         |                              { [] }
@@ -124,6 +142,11 @@ data Token = TVar String
                | TZero
                | TSuc
                | TRec
+               -- Ej 6
+               | TNil
+               | TCons
+               | TListRec
+               | TTypeList
                deriving Show
 
 ----------------------------------
@@ -158,6 +181,16 @@ lexer cont s = case s of
                               ("Nat",rest)  -> cont TTypeNat rest
                               ("suc",rest)  -> cont TSuc rest
                               ("R",rest)    -> cont TRec rest
+                              -- Ej 6
+                              ("nil", rest) -> cont TNil rest
+                              ("cons", rest) -> cont TCons rest
+                              ("RL", rest) -> cont TListRec rest
+                              ("List", rest) -> let
+                                                  (_, rest') = span isSpace rest
+                                                in case span isAlpha rest' of
+                                                  ("Nat", rest'') -> cont TTypeList rest''
+                                                  _ -> 
+                                                    \ line -> Failed $ "Línea "++(show line)++": Solo se permiten listas de naturales"
                               (var,rest)    -> cont (TVar var) rest
                           consumirBK anidado cl cont s = case s of
                               ('-':('-':cs)) -> consumirBK anidado cl cont $ dropWhile ((/=) '\n') cs
