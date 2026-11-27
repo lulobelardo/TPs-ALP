@@ -1,0 +1,25 @@
+// Prueba integral de comandos y expresiones
+a = 10;
+b = 4;
+neg = -b;
+suma = (a + b) * 2 - (a / b);
+
+if (true && !false && (a > b || b == 0)) {
+    skip
+} else {
+    a = 0
+};
+
+if (neg < 0 && a != b) {
+    res = 1
+};
+
+cont = 1;
+repeat (cont > 4 || false) {
+    if (cont == 2 || cont == 4) {
+        res = res * cont
+    } else {
+        res = res + cont
+    };
+    cont = cont + 1
+}
